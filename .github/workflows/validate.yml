@@ -1,4 +1,5 @@
-name: "Validate"
+name: Validate
+
 on:
   pull_request:
   push:
@@ -15,26 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version:
-          - 7.1
-          - 7.2
-          - 7.3
-          - 7.4
-          - 8.0
-          - 8.1
-          - 8.2
-          - 8.3
-        laravel-version:
-          # Purposefully omitting 5.5.*, it cannot be installed due to a conflict with orchestra/testbench
-          - 5.6.*
-          - 5.7.*
-          - 5.8.*
-          - ^6
-          - ^7
-          - ^8
-          - ^9
-          - ^10
-          - ^11
+        php-version: [7.1, 7.2, 7.3, 7.4, 8.0, 8.1, 8.2, 8.3]
+        laravel-version: ['5.6.*', '5.7.*', '5.8.*', '12.*', ^6, ^7, ^8, ^9, ^10, ^11]
         exclude:
           - php-version: 7.1
             laravel-version: ^6
@@ -114,27 +97,45 @@ jobs:
             laravel-version: ^6
           - php-version: 8.3
             laravel-version: ^7
+          - laravel-version: 12.*
+            php-version: 7.1
+          - laravel-version: 12.*
+            php-version: 7.2
+          - laravel-version: 12.*
+            php-version: 7.3
+          - laravel-version: 12.*
+            php-version: 7.4
+          - laravel-version: 12.*
+            php-version: 8.0
+          - laravel-version: 12.*
+            php-version: 8.1
+
 
     steps:
       - uses: actions/checkout@v4
+
 
       - uses: shivammathur/setup-php@v2
         with:
           extensions: ${{ env.REQUIRED_PHP_EXTENSIONS }}
           php-version: ${{ matrix.php-version }}
 
+
       - run: composer require illuminate/support:${{ matrix.laravel-version }} --no-interaction --prefer-dist --no-progress
 
-      - if: matrix.laravel-version == '^11'
+      - if: "matrix.laravel-version == '^11'"
         run: vendor/bin/phpunit --coverage-filter=src
-      - if: matrix.laravel-version != '^11'
+
+      - if: "matrix.laravel-version != '^11'"
         run: vendor/bin/phpunit
 
   coverage:
     runs-on: ubuntu-20.04
 
+
     steps:
       - uses: actions/checkout@v4
+
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -142,9 +143,12 @@ jobs:
           extensions: ${{ env.REQUIRED_PHP_EXTENSIONS }}
           php-version: 8.3
 
+
       - uses: ramsey/composer-install@v3
 
+
       - run: vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-filter=src
+
 
       - uses: codecov/codecov-action@v4
         with:
